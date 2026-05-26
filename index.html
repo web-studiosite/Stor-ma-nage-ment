@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+html_content = '''<!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
@@ -161,7 +162,6 @@
       if (pin.length === 0) {
         display.textContent = '• • • • • • • • • •';
       } else {
-        // Usa "●" preenchido + "○" vazio para máxima compatibilidade
         let texto = '';
         for (let i = 0; i < MAX_DIGITOS; i++) {
           if (i < pin.length) {
@@ -201,18 +201,19 @@
       }
 
       txt.textContent = 'Verificando...';
-
-      // Simula pequeno delay para feedback visual
       await new Promise(r => setTimeout(r, 300));
 
       if (pin === PIN_GESTOR) {
         txt.textContent = 'Entrando...';
+        // Guarda sessão e marca que acabou de fazer login (evita loop)
         localStorage.setItem('sessao', JSON.stringify({
           perfil_id: 'gestor-principal',
           nome: 'Gestor Principal',
           role: 'gestor_principal',
           login_em: new Date().toISOString()
         }));
+        localStorage.setItem('login_acabou_de_fazer', 'true');
+        
         setTimeout(() => {
           window.location.href = 'gestor.html';
         }, 300);
@@ -225,6 +226,8 @@
           role: 'gestor_caixa',
           login_em: new Date().toISOString()
         }));
+        localStorage.setItem('login_acabou_de_fazer', 'true');
+        
         setTimeout(() => {
           window.location.href = 'caixa.html';
         }, 300);
@@ -243,16 +246,22 @@
       }
     }
 
-    // ===== VERIFICAR SESSÃO EXISTENTE =====
+    // ===== VERIFICAR SESSÃO EXISTENTE (SEM LOOP) =====
     (function() {
       try {
+        // Se acabou de fazer login, não redireciona de novo
+        if (localStorage.getItem('login_acabou_de_fazer') === 'true') {
+          localStorage.removeItem('login_acabou_de_fazer');
+          return; // Para aqui, não redireciona
+        }
+
         const json = localStorage.getItem('sessao');
         if (json) {
           const sessao = JSON.parse(json);
           if (sessao.role === 'gestor_principal') {
-            window.location.href = 'gestor.html';
+            window.location.replace('gestor.html');
           } else if (sessao.role === 'gestor_caixa') {
-            window.location.href = 'caixa.html';
+            window.location.replace('caixa.html');
           }
         }
       } catch(e) {}
@@ -275,4 +284,9 @@
     });
   </script>
 </body>
-</html>
+</html>'''
+
+with open('/mnt/agents/output/login.html', 'w', encoding='utf-8') as f:
+    f.write(html_content)
+
+print("Ficheiro corrigido e guardado!")
