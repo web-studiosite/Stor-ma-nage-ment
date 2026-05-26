@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Loja - Caixa</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="caixa-layout">
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="logo-icon">🛒</span>
+        <div>
+          <div class="logo-text">Gestão de Loja</div>
+          <div class="logo-sub">Caixa</div>
+        </div>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="user-avatar" id="user-avatar">C</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Caixa</div>
+          <div class="user-role">Operador</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-section="#sec-vender"><span class="nav-icon">🛒</span><span class="nav-label">Vender</span></button>
+        <button class="nav-item" data-section="#sec-abastecer"><span class="nav-icon">⛽</span><span class="nav-label">Abastecer</span></button>
+        <button class="nav-item" data-section="#sec-stock"><span class="nav-icon">📦</span><span class="nav-label">Stock / Armazém</span></button>
+        <button class="nav-item" data-section="#sec-movimentos"><span class="nav-icon">🔄</span><span class="nav-label">Movimentos</span></button>
+        <button class="nav-item" data-section="#sec-turno"><span class="nav-icon">💰</span><span class="nav-label">Turno</span></button>
+        <button class="nav-item" data-section="#sec-historico"><span class="nav-icon">📋</span><span class="nav-label">Histórico</span></button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="posto-badge">
+          <span class="dot"></span>
+          <select id="select-posto" style="background:transparent;border:none;color:#fff;font-size:0.75rem;max-width:120px;">
+            <option value="">Posto...</option>
+          </select>
+        </div>
+        <button class="logout-btn" id="btn-logout" title="Sair">⏻</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="topbar-title" id="topbar-title">Vender</h1>
+        </div>
+        <div class="topbar-right">
+          <select id="select-turno" class="turno-badge" style="border:none;background:var(--primary-light);color:var(--primary);">
+            <option value="manha">☀️ Manhã</option>
+            <option value="tarde">🌤️ Tarde</option>
+            <option value="noite">🌙 Noite</option>
+          </select>
+          <span class="data-badge" id="data-atual"></span>
+          <div class="sync-indicator" id="sync-indicator">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--secondary);display:inline-block;"></span>Online
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="content-area" id="content-area">
+        <!-- Alert Container -->
+        <div id="alert-container"></div>
+
+        <!-- Vender -->
+        <section class="section active" id="sec-vender">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">🛒 Vendas Sequenciais</h2>
+          <div id="vender-conteudo"></div>
+        </section>
+
+        <!-- Abastecer -->
+        <section class="section" id="sec-abastecer">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">⛽ Abastecer</h2>
+          <div id="abastecer-conteudo"></div>
+        </section>
+
+        <!-- Stock / Armazém -->
+        <section class="section" id="sec-stock">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">📦 Stock / Armazém</h2>
+          <div id="stock-conteudo"></div>
+        </section>
+
+        <!-- Movimentos -->
+        <section class="section" id="sec-movimentos">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">🔄 Movimentos</h2>
+          <div id="mov-caixa-conteudo"></div>
+        </section>
+
+        <!-- Turno -->
+        <section class="section" id="sec-turno">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">💰 Fechamento de Turno</h2>
+          <div id="turno-caixa-conteudo"></div>
+        </section>
+
+        <!-- Histórico -->
+        <section class="section" id="sec-historico">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">📋 Histórico</h2>
+          <div id="hist-caixa-conteudo"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Botão Histórico Flutuante -->
+  <div class="historico-float">
+    <button class="historico-float-btn" id="btn-historico" title="Histórico">📋</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/formulas.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/db-local.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/historico.js"></script>
+  <script src="js/app-caixa.js"></script>
+  <script>
+    let supabaseClient;
+    try {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch(e) {
+      console.error('Supabase init error:', e);
+    }
+
+    (async function() {
+      try { await localDB.init(); } catch(e) {}
+      appCaixa.init();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Loja - Gestor</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="logo-icon">🛒</span>
+        <div>
+          <div class="logo-text">Gestão de Loja</div>
+          <div class="logo-sub">Gestor Principal</div>
+        </div>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="user-avatar" id="user-avatar">G</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Gestor</div>
+          <div class="user-role">Proprietário</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-section="#sec-dashboard"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></button>
+        <button class="nav-item" data-section="#sec-combustivel"><span class="nav-icon">⛽</span><span class="nav-label">Combustível</span></button>
+        <button class="nav-item" data-section="#sec-loja"><span class="nav-icon">🛒</span><span class="nav-label">Loja</span></button>
+        <button class="nav-item" data-section="#sec-armazem"><span class="nav-icon">📦</span><span class="nav-label">Armazém</span></button>
+        <button class="nav-item" data-section="#sec-movimentos"><span class="nav-icon">🔄</span><span class="nav-label">Movimentos</span></button>
+        <button class="nav-item" data-section="#sec-inventario"><span class="nav-icon">📋</span><span class="nav-label">Inventário</span></button>
+        <button class="nav-item" data-section="#sec-turno"><span class="nav-icon">💰</span><span class="nav-label">Turno</span></button>
+        <button class="nav-item relatorios" data-section="#sec-relatorios"><span class="nav-icon">📈</span><span class="nav-label">Relatórios</span></button>
+        <button class="nav-item config" data-section="#sec-config"><span class="nav-icon">⚙️</span><span class="nav-label">Configurações</span></button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="posto-badge">
+          <span class="dot"></span>
+          <select id="select-posto" style="background:transparent;border:none;color:#fff;font-size:0.75rem;max-width:120px;">
+            <option value="">Posto...</option>
+          </select>
+        </div>
+        <button class="logout-btn" id="btn-logout" title="Sair">⏻</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="topbar-title" id="topbar-title">Dashboard</h1>
+        </div>
+        <div class="topbar-right">
+          <select id="select-turno" class="turno-badge" style="border:none;background:var(--primary-light);color:var(--primary);">
+            <option value="manha">☀️ Manhã</option>
+            <option value="tarde">🌤️ Tarde</option>
+            <option value="noite">🌙 Noite</option>
+          </select>
+          <span class="data-badge" id="data-atual"></span>
+          <div class="sync-indicator" id="sync-indicator">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--secondary);display:inline-block;"></span>Online
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="content-area" id="content-area">
+        <!-- Alert Container -->
+        <div id="alert-container"></div>
+
+        <!-- Dashboard -->
+        <section class="section active" id="sec-dashboard">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">📊 Dashboard</h2>
+          <div id="dash-stats"></div>
+          <div id="dash-previsao"></div>
+          <div class="grid-2" style="margin-top:1.5rem;">
+            <div class="chart-container" id="dash-chart-vendas"></div>
+            <div class="card" id="dash-alertas-card">
+              <div class="card-header"><h3>⚠️ Alertas</h3></div>
+              <div class="card-body" id="dash-alertas"></div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:1.5rem;">
+            <div class="card-header"><h3>🕐 Últimas Vendas</h3></div>
+            <div class="card-body" id="dash-ultimas-vendas" style="padding:0;"></div>
+          </div>
+        </section>
+
+        <!-- Combustível -->
+        <section class="section" id="sec-combustivel">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">⛽ Combustível</h2>
+          <div id="comb-conteudo"></div>
+        </section>
+
+        <!-- Loja -->
+        <section class="section" id="sec-loja">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">🛒 Loja - Vendas</h2>
+          <div id="loja-conteudo"></div>
+        </section>
+
+        <!-- Armazém -->
+        <section class="section" id="sec-armazem">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">📦 Armazém</h2>
+          <div id="arm-conteudo"></div>
+        </section>
+
+        <!-- Movimentos -->
+        <section class="section" id="sec-movimentos">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">🔄 Movimentos de Stock</h2>
+          <div id="mov-conteudo"></div>
+        </section>
+
+        <!-- Inventário -->
+        <section class="section" id="sec-inventario">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">📋 Inventário</h2>
+          <div id="inv-conteudo"></div>
+        </section>
+
+        <!-- Turno -->
+        <section class="section" id="sec-turno">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">💰 Fechamento de Turno</h2>
+          <div id="turno-conteudo"></div>
+        </section>
+
+        <!-- Relatórios -->
+        <section class="section" id="sec-relatorios">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">📈 Relatórios</h2>
+          <div id="rel-conteudo"></div>
+        </section>
+
+        <!-- Configurações -->
+        <section class="section" id="sec-config">
+          <h2 style="margin-bottom:1rem;font-size:1.25rem;">⚙️ Configurações</h2>
+          <div id="cfg-conteudo"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Botão Histórico Flutuante -->
+  <div class="historico-float">
+    <button class="historico-float-btn" id="btn-historico" title="Histórico">📋</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/formulas.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/db-local.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/historico.js"></script>
+  <script src="js/app-gestor.js"></script>
+  <script>
+    // Inicializar Supabase global
+    let supabaseClient;
+    try {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch(e) {
+      console.error('Supabase init error:', e);
+    }
+
+    // Inicializar DB local e app
+    (async function() {
+      try {
+        await localDB.init();
+      } catch(e) {
+        console.warn('IndexedDB init warning:', e);
+      }
+      app.init();
+    })();
+  </script>
+</body>
+</html>

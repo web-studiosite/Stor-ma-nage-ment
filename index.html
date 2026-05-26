@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Loja - Login</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="login-screen" id="login-screen">
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="icon">🛒</div>
+        <h1>Gestão de Loja</h1>
+        <p>ERP para Bombas de Combustível e Loja de Conveniência</p>
+      </div>
+
+      <div class="pin-display" id="pin-display">••••••••••</div>
+
+      <div class="pin-pad">
+        <button class="pin-btn" onclick="pinDigitar('1')">1</button>
+        <button class="pin-btn" onclick="pinDigitar('2')">2</button>
+        <button class="pin-btn" onclick="pinDigitar('3')">3</button>
+        <button class="pin-btn" onclick="pinDigitar('4')">4</button>
+        <button class="pin-btn" onclick="pinDigitar('5')">5</button>
+        <button class="pin-btn" onclick="pinDigitar('6')">6</button>
+        <button class="pin-btn" onclick="pinDigitar('7')">7</button>
+        <button class="pin-btn" onclick="pinDigitar('8')">8</button>
+        <button class="pin-btn" onclick="pinDigitar('9')">9</button>
+        <button class="pin-btn action" onclick="pinEntrar()">✓</button>
+        <button class="pin-btn" onclick="pinDigitar('0')">0</button>
+        <button class="pin-btn danger" onclick="pinLimpar()">⌫</button>
+      </div>
+
+      <div class="login-status">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Pronto</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/formulas.js"></script>
+  <script src="js/db-local.js"></script>
+  <script>
+    let supabaseClient;
+    let localDB;
+    let Formulas;
+    let pinValor = '';
+    const PIN_GESTOR = '7777777770';
+    const PIN_CAIXA = '0000000007';
+
+    // Inicializar Supabase
+    try {
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch(e) {
+      console.warn('Supabase não disponível:', e);
+    }
+
+    function pinDigitar(dig) {
+      if (pinValor.length < 10) {
+        pinValor += dig;
+        atualizarDisplay();
+      }
+    }
+
+    function pinLimpar() {
+      pinValor = '';
+      atualizarDisplay();
+      U_el('pin-display').classList.remove('error');
+    }
+
+    function atualizarDisplay() {
+      const d = U_el('pin-display');
+      if (pinValor.length === 0) {
+        d.textContent = '••••••••••';
+      } else {
+        d.textContent = '●'.repeat(pinValor.length) + '•'.repeat(10 - pinValor.length);
+      }
+    }
+
+    function U_el(id) { return document.getElementById(id); }
+
+    async function pinEntrar() {
+      if (pinValor.length < 10) {
+        U_el('pin-display').classList.add('error');
+        setTimeout(() => U_el('pin-display').classList.remove('error'), 500);
+        return;
+      }
+
+      const statusDot = U_el('status-dot');
+      const statusText = U_el('status-text');
+      statusDot.style.background = 'var(--accent)';
+      statusText.textContent = 'Verificando...';
+
+      try {
+        let perfil = null;
+
+        if (pinValor === PIN_GESTOR) {
+          perfil = { id: 'gestor-principal', nome: 'Gestor Principal', role: 'gestor_principal' };
+        } else if (pinValor === PIN_CAIXA) {
+          perfil = { id: 'caixa-padrao', nome: 'Caixa', role: 'gestor_caixa' };
+        } else {
+          // Tentar Supabase
+          if (supabaseClient) {
+            const { data } = await supabaseClient.from('perfis').select('*').eq('pin', pinValor).eq('ativo', true).single();
+            if (data) perfil = data;
+          }
+        }
+
+        if (perfil) {
+          // Guardar sessão
+          const sessao = {
+            perfil_id: perfil.id,
+            nome: perfil.nome,
+            role: perfil.role,
+            token: btoa(pinValor + Date.now()),
+            login_em: new Date().toISOString()
+          };
+          localStorage.setItem('sessao', JSON.stringify(sessao));
+
+          statusText.textContent = 'Entrando...';
+
+          // Redirecionar
+          if (perfil.role === 'gestor_principal') {
+            window.location.href = 'gestor.html';
+          } else {
+            window.location.href = 'caixa.html';
+          }
+        } else {
+          U_el('pin-display').classList.add('error');
+          statusDot.style.background = 'var(--danger)';
+          statusText.textContent = 'PIN inválido';
+          pinValor = '';
+          setTimeout(() => {
+            atualizarDisplay();
+            U_el('pin-display').classList.remove('error');
+            statusDot.style.background = 'var(--secondary)';
+            statusText.textContent = 'Pronto';
+          }, 1500);
+        }
+      } catch (e) {
+        statusText.textContent = 'Erro de conexão';
+        statusDot.style.background = 'var(--danger)';
+      }
+    }
+
+    // Verificar se já tem sessão
+    (async function() {
+      try {
+        const json = localStorage.getItem('sessao');
+        if (json) {
+          const sessao = JSON.parse(json);
+          if (sessao.role === 'gestor_principal') {
+            window.location.href = 'gestor.html';
+          } else if (sessao.role === 'gestor_caixa') {
+            window.location.href = 'caixa.html';
+          }
+        }
+      } catch(e) {}
+    })();
+
+    // Check online status
+    U_el('status-dot').style.background = navigator.onLine ? 'var(--secondary)' : 'var(--warning)';
+    window.addEventListener('online', () => { U_el('status-dot').style.background = 'var(--secondary)'; U_el('status-text').textContent = 'Online'; });
+    window.addEventListener('offline', () => { U_el('status-dot').style.background = 'var(--warning)'; U_el('status-text').textContent = 'Offline'; });
+  </script>
+</body>
+</html>
