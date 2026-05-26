@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Gestão de Loja - Login</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-box {
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 30px 20px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    h1 {
+      color: #fff;
+      font-size: 22px;
+      margin-bottom: 5px;
+    }
+    p {
+      color: #8892b0;
+      font-size: 12px;
+      margin-bottom: 25px;
+    }
+    .pin-display {
+      background: rgba(0,0,0,0.3);
+      border-radius: 12px;
+      padding: 18px;
+      font-size: 28px;
+      letter-spacing: 8px;
+      color: #64ffda;
+      margin-bottom: 20px;
+      font-family: monospace;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid transparent;
+      transition: all 0.3s;
+    }
+    .pin-display.error {
+      border-color: #e63946;
+      color: #e63946;
+      animation: shake 0.4s;
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+    .pin-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .pin-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 24px;
+      padding: 18px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .pin-btn:active {
+      background: rgba(100,255,218,0.2);
+      transform: scale(0.95);
+    }
+    .pin-btn.action {
+      background: #64ffda;
+      color: #1a1a2e;
+      font-weight: bold;
+    }
+    .pin-btn.action:active {
+      background: #4dd0b8;
+    }
+    .pin-btn.danger {
+      background: rgba(230,57,70,0.2);
+      color: #e63946;
+    }
+    .login-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #8892b0;
+      font-size: 13px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64ffda;
+    }
+    .status-dot.offline { background: #f4a261; }
+    .status-dot.error { background: #e63946; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <div class="icon">🛒</div>
+    <h1>Gestão de Loja</h1>
+    <p>ERP para Bombas de Combustível e Loja de Conveniência</p>
+
+    <div class="pin-display" id="pin-display">• • • • • • • • • •</div>
+
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="digitar('1')">1</button>
+      <button class="pin-btn" onclick="digitar('2')">2</button>
+      <button class="pin-btn" onclick="digitar('3')">3</button>
+      <button class="pin-btn" onclick="digitar('4')">4</button>
+      <button class="pin-btn" onclick="digitar('5')">5</button>
+      <button class="pin-btn" onclick="digitar('6')">6</button>
+      <button class="pin-btn" onclick="digitar('7')">7</button>
+      <button class="pin-btn" onclick="digitar('8')">8</button>
+      <button class="pin-btn" onclick="digitar('9')">9</button>
+      <button class="pin-btn action" onclick="entrar()">✓</button>
+      <button class="pin-btn" onclick="digitar('0')">0</button>
+      <button class="pin-btn danger" onclick="limpar()">⌫</button>
+    </div>
+
+    <div class="login-status">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Pronto</span>
+    </div>
+  </div>
+
+  <script>
+    // ===== CONFIGURAÇÃO =====
+    let pin = '';
+    const PIN_GESTOR = '7777777770';
+    const PIN_CAIXA = '0000000007';
+    const MAX_DIGITOS = 10;
+
+    // ===== FUNÇÕES AUXILIARES =====
+    function $(id) { return document.getElementById(id); }
+
+    function atualizarDisplay() {
+      const display = $('pin-display');
+      if (pin.length === 0) {
+        display.textContent = '• • • • • • • • • •';
+      } else {
+        // Usa "●" preenchido + "○" vazio para máxima compatibilidade
+        let texto = '';
+        for (let i = 0; i < MAX_DIGITOS; i++) {
+          if (i < pin.length) {
+            texto += '●';
+          } else {
+            texto += '○';
+          }
+          if (i < MAX_DIGITOS - 1) texto += ' ';
+        }
+        display.textContent = texto;
+      }
+    }
+
+    // ===== AÇÕES DOS BOTÕES =====
+    function digitar(num) {
+      if (pin.length < MAX_DIGITOS) {
+        pin += num;
+        atualizarDisplay();
+      }
+    }
+
+    function limpar() {
+      pin = '';
+      atualizarDisplay();
+      $('pin-display').classList.remove('error');
+    }
+
+    async function entrar() {
+      const display = $('pin-display');
+      const dot = $('status-dot');
+      const txt = $('status-text');
+
+      if (pin.length < MAX_DIGITOS) {
+        display.classList.add('error');
+        setTimeout(() => display.classList.remove('error'), 500);
+        return;
+      }
+
+      txt.textContent = 'Verificando...';
+
+      // Simula pequeno delay para feedback visual
+      await new Promise(r => setTimeout(r, 300));
+
+      if (pin === PIN_GESTOR) {
+        txt.textContent = 'Entrando...';
+        localStorage.setItem('sessao', JSON.stringify({
+          perfil_id: 'gestor-principal',
+          nome: 'Gestor Principal',
+          role: 'gestor_principal',
+          login_em: new Date().toISOString()
+        }));
+        setTimeout(() => {
+          window.location.href = 'gestor.html';
+        }, 300);
+      }
+      else if (pin === PIN_CAIXA) {
+        txt.textContent = 'Entrando...';
+        localStorage.setItem('sessao', JSON.stringify({
+          perfil_id: 'caixa-padrao',
+          nome: 'Caixa',
+          role: 'gestor_caixa',
+          login_em: new Date().toISOString()
+        }));
+        setTimeout(() => {
+          window.location.href = 'caixa.html';
+        }, 300);
+      }
+      else {
+        display.classList.add('error');
+        dot.classList.add('error');
+        txt.textContent = 'PIN inválido';
+        pin = '';
+        setTimeout(() => {
+          atualizarDisplay();
+          display.classList.remove('error');
+          dot.classList.remove('error');
+          txt.textContent = 'Pronto';
+        }, 1500);
+      }
+    }
+
+    // ===== VERIFICAR SESSÃO EXISTENTE =====
+    (function() {
+      try {
+        const json = localStorage.getItem('sessao');
+        if (json) {
+          const sessao = JSON.parse(json);
+          if (sessao.role === 'gestor_principal') {
+            window.location.href = 'gestor.html';
+          } else if (sessao.role === 'gestor_caixa') {
+            window.location.href = 'caixa.html';
+          }
+        }
+      } catch(e) {}
+    })();
+
+    // ===== STATUS ONLINE =====
+    const dot = $('status-dot');
+    const txt = $('status-text');
+    if (!navigator.onLine) {
+      dot.classList.add('offline');
+      txt.textContent = 'Offline';
+    }
+    window.addEventListener('online', () => {
+      dot.classList.remove('offline');
+      txt.textContent = 'Online';
+    });
+    window.addEventListener('offline', () => {
+      dot.classList.add('offline');
+      txt.textContent = 'Offline';
+    });
+  </script>
+</body>
+</html>
